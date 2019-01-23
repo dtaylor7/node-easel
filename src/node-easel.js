@@ -22,15 +22,35 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-var Canvas = require('canvas');
-var Image = Canvas.Image;
+const { createCanvas, loadImage, Image } = require('canvas');
 
-/**
- * Surpress addEventListener errors on easel.
- * Its currently only used for MouseEvent, so its not needed on the server.
- *
- */
-Canvas.prototype.addEventListener = function () { };
+const Canvas = (...args) => {
+	const canvas = createCanvas(...args);
+	/**
+	 * Surpress addEventListener errors on easel.
+	 * Its currently only used for MouseEvent, so its not needed on the server.
+	 *
+	 */
+	canvas.prototype.addEventListener = function () { };
+
+	/**
+	 * node-canvas doesn't support cloneNode();
+	 * So create our own.
+	 *
+	 * @return {Canvas}
+	 */
+	canvas.prototype.cloneNode = function () {
+		var c = new Canvas(this.width, this.height);
+		c.type = this.type;
+
+		return c;
+	};
+
+	return canvas;
+};
+var Canvas = require('canvas');
+
+
 
 /**
  * Inject a window object
@@ -38,19 +58,6 @@ Canvas.prototype.addEventListener = function () { };
  * @type {Object}
  */
 window = { addEventListener:function () { } };
-
-/**
- * node-canvas doesn't support cloneNode();
- * So create our own.
- *
- * @return {Canvas}
- */
-Canvas.prototype.cloneNode = function () {
-	var c = new Canvas(this.width, this.height);
-	c.type = this.type;
-
-	return c;
-};
 
 // Easel uses instanceof HTMLCanvasElement, so change it to Canvas.
 HTMLCanvasElement = Canvas;
